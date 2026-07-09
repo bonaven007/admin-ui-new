@@ -1,9 +1,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import LabeledInput from "../Elements/LabeledInput";
 import Button from "../Elements/Button";
 
-function FormSignUp() {
+const SignUpSchema = Yup.object().shape({
+  name: Yup.string().required("Name wajib diisi"),
+  email: Yup.string().email("Email tidak valid").required("Email wajib diisi"),
+  password: Yup.string()
+    .min(6, "Password minimal 6 karakter")
+    .required("Password wajib diisi"),
+});
+
+function FormSignUp({ onSubmit }) {
   return (
     <>
       {/* form start */}
@@ -11,44 +21,90 @@ function FormSignUp() {
         <h1 className="text-2xl font-bold text-center mb-10">
           Create an account
         </h1>
-        <form action="">
-          <div className="mb-6">
-            <LabeledInput
-              label="Name"
-              id="name"
-              type="text"
-              placeholder="Name"
-              name="name"
-            />
-          </div>
+        <Formik
+          initialValues={{
+            name: "",
+            email: "",
+            password: "",
+          }}
+          validationSchema={SignUpSchema}
+          onSubmit={async (values, { setSubmitting, resetForm }) => {
+            try {
+              await onSubmit(values.name, values.email, values.password);
+              resetForm();
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <div className="mb-6">
+                <Field name="name">
+                  {({ field }) => (
+                    <LabeledInput
+                      {...field}
+                      id="name"
+                      type="text"
+                      label="Name"
+                      placeholder="Name"
+                    />
+                  )}
+                </Field>
+                <ErrorMessage
+                  name="name"
+                  component="p"
+                  className="text-red-500 text-xs mt-1"
+                />
+              </div>
 
-          <div className="mb-6">
-            <LabeledInput
-              label="Email Address"
-              id="email"
-              type="email"
-              placeholder="hello@example.com"
-              name="email"
-            />
-          </div>
+              <div className="mb-6">
+                <Field name="email">
+                  {({ field }) => (
+                    <LabeledInput
+                      {...field}
+                      id="email"
+                      type="email"
+                      label="Email Address"
+                      placeholder="hello@example.com"
+                    />
+                  )}
+                </Field>
+                <ErrorMessage
+                  name="email"
+                  component="p"
+                  className="text-red-500 text-xs mt-1"
+                />
+              </div>
 
-          <div className="mb-6">
-            <LabeledInput
-              label="Password"
-              id="password"
-              type="password"
-              placeholder="********"
-              name="password"
-            />
-          </div>
+              <div className="mb-6">
+                <Field name="password">
+                  {({ field }) => (
+                    <LabeledInput
+                      {...field}
+                      id="password"
+                      type="password"
+                      label="Password"
+                      placeholder="********"
+                    />
+                  )}
+                </Field>
+                <ErrorMessage
+                  name="password"
+                  component="p"
+                  className="text-red-500 text-xs mt-1"
+                />
+              </div>
 
-          <div className="mb-6 text-sm text-gray-03">
-            By continuing, you agree to our{" "}
-            <span className="text-primary">terms of service</span>.
-          </div>
+              <div className="mb-6 text-sm text-gray-03">
+                By continuing, you agree to our {" "}
+                <span className="text-primary">terms of service</span>.
+              </div>
 
-          <Button>Sign up</Button>
-        </form>
+              <Button>{isSubmitting ? "Loading..." : "Sign up"}</Button>
+            </Form>
+          )}
+        </Formik>
       </div>
       {/* form end */}
 

@@ -5,7 +5,9 @@ import Input from "../Elements/Input";
 import Icon from "../Elements/Icon";
 import { NavLink } from "react-router-dom";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import { Backdrop, CircularProgress } from "@mui/material";
 import { ThemeContext } from "../../context/ThemeContext";
+import ThemeToggle from "../Elements/ThemeToggle";
 import { AuthContext } from "../../context/authContext";
 import { logoutService } from "../../context/authContext";
 
@@ -19,7 +21,7 @@ function MainLayout(props) {
     { name: "theme-brown", bgcolor: "bg-[#8B4513]", color: "#8B4513" },
   ];
 
-    const { theme, setTheme } = useContext(ThemeContext);
+    const { theme, setTheme, mode } = useContext(ThemeContext);
   const menu = [
     { id: 1, name: "Overview", icon: <Icon.Overview />, link: "/" },
     { id: 2, name: "Balances", icon: <Icon.Balance />, link: "/balance" },
@@ -36,21 +38,25 @@ function MainLayout(props) {
   ];
 
   const { user, logout } = useContext(AuthContext);
+  const [loggingOut, setLoggingOut] = useState(false);
   const handleLogout = async () => {
     try {
+      setLoggingOut(true);
       await logoutService();
       logout();
     } catch (err) {
       console.error(err);
-      if (err.status === 401) {
+      if (err?.status === 401) {
         logout();
       }
+    } finally {
+      setLoggingOut(false);
     }
   };
 
   return (
     <>
-      <div className={`flex min-h-screen ${theme.name}`}>
+      <div className={`flex min-h-screen ${theme.name} ${mode === "dark" ? "dark" : "light"}`}>
         {/* ===== SIDEBAR ===== */}
         <aside className="flex flex-col justify-between bg-special-bg text-white w-28 sm:w-56 py-6 px-4">
           {/* Bagian Atas: Logo + Nav */}
@@ -142,12 +148,26 @@ function MainLayout(props) {
             </div>
           </header>
 
+            {/* Theme toggle below navbar */}
+            <div className="px-6 py-3 border-b border-gray-03 bg-special-mainBg">
+              <ThemeToggle />
+            </div>
+
           {/* Main Content */}
           <main className="flex-1 min-h-0 px-6 py-6 bg-special-mainBg overflow-auto">
             {children}
           </main>
         </div>
       </div>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={loggingOut}
+      >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <CircularProgress color="inherit" />
+          <div style={{ marginTop: 8 }}>Logging Out</div>
+        </div>
+      </Backdrop>
     </>
   );
 }
